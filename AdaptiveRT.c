@@ -98,11 +98,11 @@ int main(int argc, char* argv[]) {
 					if(flag){
 						//printf("%d %d %d %d\n", process_list[i].policy, atoi(policy_output), process_list[i].priority , atoi(priority_output));
 						if(process_list[i].policy == SCHED_OTHER && 19 - process_list[i].priority == atoi(priority_output)){
-							printf("pid %d is already set.\n", atoi(pid_output));
+							//printf("pid %d is already set.\n", atoi(pid_output));
 						}else if((process_list[i].policy == SCHED_FIFO ||
 								process_list[i].policy == SCHED_RR) &&
 								process_list[i].priority + 40 == atoi(priority_output)){
-							printf("pid %d is already set.\n", atoi(pid_output));
+							//printf("pid %d is already set.\n", atoi(pid_output));
 						}
 						else{
 							setPriority(process_list[i].policy, atoi(pid_output), process_list[i].priority);
