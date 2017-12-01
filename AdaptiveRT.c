@@ -30,9 +30,11 @@ int setProcesses(FILE *pFile, int* interval, process_attr** process_list);
 void setPriority(int policy, int pid, int priority);
 static int sched_setattr(pid_t pid, const struct sched_attr *attr, unsigned int flags);
 void printProcesses(process_attr* process_list, int process_count);
-
+const char* docker_uri;
 
 int main(int argc, char* argv[]) {
+	docker_uri = getenv("DOCKER_URI");
+	printf("docker uri : %s\n", docker_uri);
 	int interval, i, j;
 	int process_count;
 	int flag = 1;
@@ -50,7 +52,7 @@ int main(int argc, char* argv[]) {
 			char cmd_dockertop[1024];// = (char*)malloc(100*sizeof(char)); // must be free
 			char output_dockertop[1024];
 			FILE *fp; // must be closed
-			sprintf(cmd_dockertop, "docker top %s | grep %s | awk '{print $2}'",
+			sprintf(cmd_dockertop, "docker -H %s top %s | grep %s | awk '{print $2}'", docker_uri,
 					process_list[i].container_name, process_list[i].name);
 			fp = popen(cmd_dockertop, "r");
 
