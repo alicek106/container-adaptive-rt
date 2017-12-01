@@ -24,6 +24,7 @@ typedef struct {
 	char name[MAX_PROCESS_COUNT];
 	int policy;
 	int priority;
+	int enable_lwp;
 } process_attr;
 
 int setProcesses(FILE *pFile, int* interval, process_attr** process_list);
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
 				char cmd_ps[1024];
 				char output_ps[1024];
 				output_dockertop[strcspn(output_dockertop, "\n")] = 0; // remove included \n in output of cmd.
-				sprintf(cmd_ps, "ps -cLe | grep %s | awk '{ print $4; print $3; print $2; }'", output_dockertop);
+				sprintf(cmd_ps, "ps -cLe | grep %s | awk '{ print $4; print $3; print $2; print $1;}'", output_dockertop);
 				// printf("%s\n", cmd_ps);
 				fp2 = popen(cmd_ps, "r");
 				flag = 1;
@@ -73,8 +74,9 @@ int main(int argc, char* argv[]) {
 				while(flag){
 					char priority_output[1024];
 					char policy_output[1024];
+					char lwp_pid_output[1024];
 					char pid_output[1024];
-					for(j = 0; j < 3; j++){
+					for(j = 0; j < 4; j++){
 						if(fgets(output_ps, sizeof(output_ps)-1, fp2) == NULL){
 							flag = 0;
 							break;
@@ -91,6 +93,10 @@ int main(int argc, char* argv[]) {
 								break;
 							}
 							case 2: {
+								strcpy(lwp_pid_output, output_ps);
+								break;
+							}
+							case 3: {
 								strcpy(pid_output, output_ps);
 								break;
 							}
@@ -107,7 +113,13 @@ int main(int argc, char* argv[]) {
 							//printf("pid %d is already set.\n", atoi(pid_output));
 						}
 						else{
-							setPriority(process_list[i].policy, atoi(pid_output), process_list[i].priority);
+							if(!(process_list[i].enable_lwp == 1 && atoi(lwp_pid_output) == atoi(pid_output))){
+								setPriority(process_list[i].policy, atoi(lwp_pid_output), process_list[i].priority);
+							}
+							/*
+							else{
+								printf("%s %s is same!\n", lwp_pid_output, pid_output);
+							}*/
 						}
 					}
 				}
@@ -120,7 +132,6 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-
 int setProcesses(FILE *pFile, int* interval, process_attr** process_list) {
 	char buffer[MAX_PROCESS_COUNT];
 	int value = fscanf(pFile, "%s", buffer);
@@ -131,12 +142,13 @@ int setProcesses(FILE *pFile, int* interval, process_attr** process_list) {
 	char* name[MAX_PROCESS_COUNT];
 	int policy[MAX_PROCESS_COUNT];
 	int priority[MAX_PROCESS_COUNT];
+	int enable_lwp[MAX_PROCESS_COUNT];
 
 	*interval = atoi(buffer);
 	printf("Scheduling interval : %d ms\n", *interval);
 
 	while (flag) {
-		for (i = 0; i < 4; i++) {
+		for (i = 0; i < 5; i++) {
 			value = fscanf(pFile, "%s", buffer);
 			if (value == EOF) {
 				flag = 0;
@@ -173,6 +185,10 @@ int setProcesses(FILE *pFile, int* interval, process_attr** process_list) {
 					strcpy(name[process_count], buffer);
 					break;
 				}
+				case 4: {
+					enable_lwp[process_count] = atoi(buffer);
+					break;
+				}
 			}
 		}
 		if (value != EOF) {
@@ -187,6 +203,7 @@ int setProcesses(FILE *pFile, int* interval, process_attr** process_list) {
 		strcpy((*process_list)[i].name, name[i]);
 		(*process_list)[i].priority = priority[i];
 		(*process_list)[i].policy = policy[i];
+		(*process_list)[i].enable_lwp = enable_lwp[i];
 	}
 
 	return process_count;
@@ -218,7 +235,8 @@ void setPriority(int policy, int pid, int priority){
 void printProcesses(process_attr* process_list, int process_count) {
 	int i;
 	for (i = 0; i < process_count; i++) {
-		printf("Container : [%s], Process : [%s], Priority : [%d], Policy : [%d] \n",
-				process_list[i].container_name, process_list[i].name, process_list[i].priority, process_list[i].policy);
+		printf("Container : [%s], Process : [%s], Priority : [%d], Policy : [%d], Enable Lwp : %d \n",
+				process_list[i].container_name, process_list[i].name, process_list[i].priority, process_list[i].policy,
+				process_list[i].enable_lwp);
 	}
 }

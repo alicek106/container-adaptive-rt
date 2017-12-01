@@ -1,2 +1,2 @@
 1000
-test SCHED_FIFO 40 apache
+test SCHED_FIFO 40 apache 1
