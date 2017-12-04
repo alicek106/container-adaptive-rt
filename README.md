@@ -42,4 +42,4 @@ In below case, we will change priority of process for all processes correspondin
     
     # docker run -d --cap-add=sys_nice --name rt-agent \
     --privileged --pid=host -e DOCKER_URI=192.168.0.44:2375 \
-    -v "$PWD"/config.txt:/config.txt alicek106/rt-agent:0.2 ./AdaptiveRT
+    -v "$PWD"/config.txt:/config.txt alicek106/rt-agent:0.3 ./AdaptiveRT
